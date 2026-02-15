@@ -1,0 +1,234 @@
+/*
+ * Learning Objective:
+ * Master the use of CSS Scroll-Linked Animations to create dynamic,
+ * scroll-based storytelling effects without JavaScript. You will learn
+ * how to define a scroll timeline, link animations to it, and precisely
+ * control when and how elements animate based on scroll progression.
+ * This tutorial focuses on using modern CSS features like `@scroll-timeline`,
+ * `animation-timeline`, and `animation-range` for powerful, performant effects.
+ */
+
+/*
+ * 1. Basic Setup & Global Styles
+ *    These styles ensure a clean slate and make scrolling possible.
+ */
+html, body {
+  /* No default margin/padding for consistent layout */
+  margin: 0;
+  padding: 0;
+  /* Set a nice background color for contrast */
+  background-color: #1a1a2e;
+  /* Define default font and color */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #e0e0e0;
+  /* Enable smooth scrolling for a better user experience */
+  scroll-behavior: smooth;
+  /* Content will naturally determine scroll height,
+     no fixed min-height needed here if content is sufficient. */
+}
+
+/*
+ * 2. Define Scroll Containers and Content Structure
+ *    These styles create the elements that will house our story and interact with the scroll.
+ */
+.story-container {
+  /* Center the content horizontally on the page */
+  max-width: 800px;
+  margin: 0 auto;
+  /* Add some padding to the sides so content doesn't touch edges */
+  padding: 20px;
+}
+
+/*
+ * 3. Style for Individual Story Cards
+ *    Each .story-card will be an animated element.
+ */
+.story-card {
+  /* Basic styling for each story card */
+  background-color: #0f3460;
+  /* Add large vertical margins to separate cards, ensuring there's plenty of scroll space
+     between them. This makes the scroll-linked effect more noticeable as each card
+     enters and exits the viewport distinctively. */
+  margin: 80vh 0; /* 80% of viewport height top/bottom margin */
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  overflow: hidden; /* Ensures any scaled content doesn't spill out */
+
+  /*
+   * Initial State for Animation:
+   * We want the cards to start invisible and slightly scaled down/transformed
+   * before they are animated into full view.
+   */
+  opacity: 0; /* Start completely transparent */
+  transform: scale(0.7) translateY(50px) rotateX(15deg); /* Start smaller, lower, and slightly tilted */
+
+  /*
+   * KEY CONCEPT: Linking animation to scroll progression!
+   * This is where the magic happens using modern CSS Scroll-Driven Animations.
+   *
+   * The `animation` property defines *what* animation to play and its basic timing.
+   * `reveal-and-grow`: The name of our keyframe animation.
+   * `linear`: The animation progresses at a constant speed.
+   * `forwards`: The animation will retain the style values from the last keyframe
+   *             when it finishes. This is crucial for keeping the element revealed.
+   */
+  animation: reveal-and-grow linear forwards;
+
+  /*
+   * KEY CONCEPT: `animation-timeline: view()`
+   * This property links the animation to the *scroll progression* of the element
+   * within its scroll container.
+   * `view()` is a built-in scroll timeline that represents the progression
+   * of an element as it enters, traverses, and exits its scrollport (typically the viewport).
+   * It takes precedence over `animation-duration` when present.
+   */
+  animation-timeline: view();
+
+  /*
+   * KEY CONCEPT: `animation-range`
+   * This property defines *when* the animation should play within the `view()` timeline.
+   * It controls the start and end points of the animation relative to the element's
+   * visibility within its scrollport.
+   *
+   * 'cover 0%': The animation starts when the element first *begins* to cover any part
+   *             of the scrollport (i.e., its top or bottom edge crosses the scrollport boundary).
+   * 'cover 50%': The animation ends when the element has covered 50% of the scrollport
+   *              (e.g., its center is aligned with the scrollport's center).
+   *
+   * Combined, this creates a 'reveal and grow' effect as the element enters the screen
+   * and reaches the middle of the viewport.
+   *
+   * Browser Support Note: This feature is well-supported in Chromium-based browsers (Chrome 115+, Edge 115+)
+   * and Safari 17.2+. Firefox is actively working on implementation. For unsupported browsers,
+   * the elements will appear in their initial state (opacity: 0, scaled down).
+   */
+  animation-range: cover 0% cover 50%;
+}
+
+/*
+ * 4. Define the Scroll-Linked Keyframe Animation for Entry
+ *    This is the animation that will be driven by scroll progression.
+ */
+@keyframes reveal-and-grow {
+  /*
+   * 0% (Start of `animation-range: cover 0%`):
+   * This defines the initial state *when the animation starts* (element first visible).
+   */
+  0% {
+    opacity: 0; /* Fully transparent */
+    transform: scale(0.7) translateY(50px) rotateX(15deg); /* Small, low, tilted */
+  }
+  /*
+   * 100% (End of `animation-range: cover 50%`):
+   * This defines the final state *when the animation completes* (element's center at scrollport center).
+   */
+  100% {
+    opacity: 1; /* Fully opaque */
+    transform: scale(1) translateY(0) rotateX(0deg); /* Normal size, position, and rotation */
+  }
+}
+
+/*
+ * OPTIONAL: Adding a second animation for a "fade out as it leaves" effect
+ * This demonstrates how multiple animations can be linked to the same element
+ * and different scroll ranges, providing a more complete storytelling transition.
+ *
+ * To apply multiple animations to a single element, list them in the `animation`,
+ * `animation-timeline`, and `animation-range` properties, separated by commas.
+ */
+.story-card {
+  /* Add the new 'fade-and-shrink-exit' animation to the list. */
+  animation: reveal-and-grow linear forwards,
+             fade-and-shrink-exit linear forwards; /* Note the comma for multiple animations */
+
+  /* Link both animations to the `view()` timeline. */
+  animation-timeline: view(), view(); /* Each animation needs a timeline specified */
+
+  /* Define ranges for both animations.
+     The first range is for 'reveal-and-grow' (as it enters and reaches center).
+     The second range is for 'fade-and-shrink-exit' (as it moves past center and leaves).
+     'cover 70%': The exit animation starts when the element has covered 70% of the scrollport.
+     'cover 100%': The exit animation ends when the element has fully covered the scrollport,
+                   just before it completely leaves the view. */
+  animation-range: cover 0% cover 50%, /* Range for reveal-and-grow */
+                   cover 70% cover 100%; /* Range for fade-and-shrink-exit */
+}
+
+/*
+ * 5. Define the Scroll-Linked Keyframe Animation for Exit
+ *    This animation will play as the element scrolls out of view.
+ */
+@keyframes fade-and-shrink-exit {
+  /*
+   * 0% (Start of this animation-range: `cover 70%`):
+   * At this point, the element should still be fully visible and at its normal size
+   * (the end state of the `reveal-and-grow` animation).
+   */
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  /*
+   * 100% (End of this animation-range: `cover 100%`):
+   * As the element fully covers and prepares to leave the scrollport,
+   * we make it partially fade out and shrink slightly.
+   */
+  100% {
+    opacity: 0.3; /* Fade to semi-transparent */
+    transform: scale(0.95); /* Shrink slightly */
+  }
+}
+
+/*
+ * Example Usage (HTML Structure)
+ *
+ * Copy and paste this HTML into your .html file to see the CSS in action.
+ * Save it as an HTML file (e.g., `scroll_story.html`) and open it in a modern browser.
+ *
+ * <!DOCTYPE html>
+ * <html lang="en">
+ * <head>
+ *     <meta charset="UTF-8">
+ *     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ *     <title>Scroll-Linked Storytelling Effect</title>
+ *     <style>
+ *         /* PASTE ALL THE CSS CODE ABOVE INTO THIS <style> TAG */
+ *     </style>
+ * </head>
+ * <body>
+ *     <div class="story-container">
+ *         <h1 style="text-align: center; margin-bottom: 50px;">A Scroll-Linked Story</h1>
+ *         <p style="text-align: center; font-size: 1.2em;">Scroll down to reveal the story elements!</p>
+ *
+ *         <div class="story-card">
+ *             <h2>Chapter 1: The Awakening</h2>
+ *             <p>In a world shrouded by mist, an ancient power began to stir. Whispers carried on the wind spoke of a forgotten prophecy.</p>
+ *         </div>
+ *
+ *         <div class="story-card">
+ *             <h2>Chapter 2: The Call to Adventure</h2>
+ *             <p>A lone hero, unaware of their destiny, felt an inexplicable pull towards the forbidden mountains, a journey fraught with peril.</p>
+ *         </div>
+ *
+ *         <div class="story-card">
+ *             <h2>Chapter 3: Ancient Guardians</h2>
+ *             <p>Deep within the peaks, colossal stone guardians stood watch, their eyes glowing faintly as the hero approached.</p>
+ *         </div>
+ *
+ *         <div class="story-card">
+ *             <h2>Chapter 4: The Revelation</h2>
+ *             <p>The prophecy revealed itself, not as a curse, but as a path to salvation, requiring courage and sacrifice.</p>
+ *         </div>
+ *
+ *         <div class="story-card">
+ *             <h2>Chapter 5: A New Dawn</h2>
+ *             <p>With newfound strength and allies, the hero faced the ultimate challenge, ushering in an era of peace and light.</p>
+ *         </div>
+ *
+ *         <p style="margin-top: 80vh; text-align: center; font-size: 1.2em;">End of the Story. Thanks for scrolling!</p>
+ *     </div>
+ * </body>
+ * </html>
+ */
